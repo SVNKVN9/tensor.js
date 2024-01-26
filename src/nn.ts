@@ -72,27 +72,30 @@ export default class NeuralNetwork {
             output[i] = this.sigmoid(output[i]);
         }
 
-        const errorsOutput = new Array(this.outputSize);
-        const errorsHidden = new Array(this.hiddenSize);
+
+        const errorsOutput = this.CalculateMSE(output, target);
 
         for (let i = 0; i < this.outputSize; i++) {
-            errorsOutput[i] = target[i] - output[i];
             for (let j = 0; j < this.hiddenSize; j++) {
                 this.weightsHiddenToOutput[i][j] +=
                     this.learningRate *
-                    errorsOutput[i] *
+                    errorsOutput
                     output[i] *
                     (1 - output[i]) *
                     hiddenLayer[j];
             }
-            this.biasOutput[i] += this.learningRate * errorsOutput[i];
+            this.biasOutput[i] = this.learningRate * errorsOutput;
         }
+
+        const errorsHidden = new Array(this.hiddenSize);
 
         for (let i = 0; i < this.hiddenSize; i++) {
             errorsHidden[i] = 0;
+            
             for (let j = 0; j < this.outputSize; j++) {
-                errorsHidden[i] += this.weightsHiddenToOutput[j][i] * errorsOutput[j];
+                errorsHidden[i] += this.weightsHiddenToOutput[j][i] * errorsOutput;
             }
+
             this.biasHidden[i] += this.learningRate * errorsHidden[i];
             for (let j = 0; j < this.inputSize; j++) {
                 this.weightsInputToHidden[i][j] +=
@@ -107,5 +110,21 @@ export default class NeuralNetwork {
 
     sigmoid(x: number) {
         return 1 / (1 + Math.exp(-x));
+    }
+
+    CalculateMSE(targets: number[], outputs: number[]) {
+        let mse = 0;
+        
+        for (let i = 0; i < targets.length; i++) {
+            mse = (targets[i] - outputs[i]) ** 2
+        }
+
+        mse = mse / targets.length
+        
+        if (isNaN(mse)) {
+            return 0;
+        }
+    
+        return mse;
     }
 }
